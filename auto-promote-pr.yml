@@ -5,10 +5,10 @@ on:
       - closed
     branches:
       - main
-if: github.event.pull_request.merged == true
 
 jobs:
   auto-pipeline-promotion:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Run Pipeline Promotion
@@ -17,12 +17,13 @@ jobs:
           script: |
             const promotionBranch = 'staging';
             const {repo, owner} = context.repo;
+            const payload = context.payload;
 
 
             const commit = await github.rest.repos.getCommit({
               owner,
               repo,
-              ref: context.sha
+              ref: payload.pull_request.merge_commit_sha
             });
             const newBranchRef = `auto-promotion/${payload.pull_request.head.ref}`;
             const tempBranchRef = `${newBranchRef}-temp`;
@@ -126,5 +127,5 @@ jobs:
               repo,
               head: prBranchRef.data.ref,
               base: promotionBranch,
-              body: `Automatically promoted PR from ${payload.pull_request.number}${fallback ? ' - including all prior commits' : ''}`
+              body: `Automatically promoted PR from #${payload.pull_request.number}${fallback ? ' - including all prior commits' : ''}`
             });
